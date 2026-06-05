@@ -183,6 +183,7 @@ export default function StudentQuizPage() {
 
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [errorMsg, setErrorMsg] = useState('');
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [attempt, setAttempt] = useState<QuizAttemptStartResponse | null>(null);
   const [result, setResult] = useState<QuizResultResponse | null>(null);
 
@@ -203,7 +204,7 @@ export default function StudentQuizPage() {
         setPhase('quiz');
       })
       .catch(err => {
-        const msg = err?.response?.data?.message ?? 'Không thể bắt đầu quiz.';
+        const msg = err instanceof Error ? err.message : 'Không thể bắt đầu quiz.';
         setErrorMsg(msg);
         setPhase('error');
       });
@@ -218,8 +219,8 @@ export default function StudentQuizPage() {
       setResult(res);
       setPhase('results');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      notify.error(msg ?? 'Nộp bài thất bại.');
+      const msg = err instanceof Error ? err.message : 'Nộp bài thất bại.';
+      notify.error(msg);
       setPhase('quiz');
     }
   }, [attempt, answers]);
@@ -244,8 +245,8 @@ export default function StudentQuizPage() {
       setAnswers(init);
       setPhase('quiz');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setErrorMsg(msg ?? 'Không thể bắt đầu quiz.');
+      const msg = err instanceof Error ? err.message : 'Không thể bắt đầu quiz.';
+      setErrorMsg(msg);
       setPhase('error');
     }
   }
@@ -437,9 +438,7 @@ export default function StudentQuizPage() {
       {/* Topbar */}
       <header className="h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-4 md:px-8 flex-shrink-0 sticky top-0 z-10">
         <button
-          onClick={() => {
-            if (window.confirm('Bạn có chắc muốn thoát? Tiến trình làm bài sẽ mất.')) navigate(-1);
-          }}
+          onClick={() => setShowExitConfirm(true)}
           className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-semibold text-sm"
         >
           <ArrowLeft className="w-4 h-4" /> Thoát
@@ -616,6 +615,44 @@ export default function StudentQuizPage() {
           )}
         </div>
       </main>
+
+      {/* Exit confirm modal */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-surface-container-lowest rounded-2xl p-6 max-w-sm w-full shadow-xl border border-outline-variant/40"
+            >
+              <h3 className="text-lg font-extrabold text-on-surface mb-2">Thoát bài quiz?</h3>
+              <p className="text-sm text-on-surface-variant mb-6">
+                Tiến trình làm bài sẽ mất và không được lưu lại.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="px-4 py-2 rounded-xl border border-outline-variant text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
+                >
+                  Ở lại
+                </button>
+                <button
+                  onClick={() => navigate(-1)}
+                  className="px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors"
+                >
+                  Thoát
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

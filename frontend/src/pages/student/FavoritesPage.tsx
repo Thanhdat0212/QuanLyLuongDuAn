@@ -70,7 +70,12 @@ export default function FavoritesPage() {
   }, [favoritedIds, favoritedRealCourses]);
 
   function handleAddToCart(course: (typeof MOCK_COURSES)[0]) {
-    addToCart(course);
+    addToCart({
+      id: course.id,
+      title: course.title,
+      priceVnd: parseInt((course.price ?? '0').replace(/\D/g, '')) || 0,
+      image: course.image,
+    });
     notify.success(`Đã thêm "${course.title}" vào giỏ hàng`);
   }
 
