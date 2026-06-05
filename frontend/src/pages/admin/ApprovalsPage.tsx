@@ -85,7 +85,7 @@ export default function ApprovalsPage() {
     try {
       const res = await apiClient.get<ApiResponse<PageResponse<PendingCourse>>>(
         '/api/admin/courses/pending',
-        { params: { page: 0, size: 100, sort: 'submittedAt,asc' } },
+        { params: { page: 0, size: 100, sort: 'updatedAt,asc' } },
       );
       setCourses(unwrap(res.data).items);
     } catch {

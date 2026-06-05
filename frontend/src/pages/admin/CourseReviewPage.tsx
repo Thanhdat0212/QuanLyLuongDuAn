@@ -118,6 +118,15 @@ export default function CourseReviewPage() {
   async function doAction(type: 'approve' | 'reject' | 'revise') {
     if (!courseId) return;
 
+    if ((type === 'reject' || type === 'revise') && !comment.trim()) {
+      notify.error(
+        type === 'reject'
+          ? 'Vui lòng nhập lý do từ chối trước khi gửi.'
+          : 'Vui lòng nhập hướng dẫn chỉnh sửa trước khi gửi.',
+      );
+      return;
+    }
+
     const endpoint = `/api/admin/courses/${courseId}/${type}`;
     const labels = { approve: 'Duyệt', reject: 'Từ chối', revise: 'Yêu cầu sửa' };
     const successMessages = {
@@ -131,8 +140,9 @@ export default function CourseReviewPage() {
       await apiClient.post(endpoint, { comment: comment.trim() || null });
       notify.success(successMessages[type]);
       navigate('/admin/approvals');
-    } catch {
-      notify.error(`Không thực hiện được thao tác "${labels[type]}"`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      notify.error(msg || `Không thực hiện được thao tác "${labels[type]}"`);
     } finally {
       setActionLoading(null);
     }
@@ -437,7 +447,7 @@ export default function CourseReviewPage() {
                   <label className="block mb-4">
                     <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wide mb-1.5 block">
                       Nhận xét / Lý do
-                      <span className="text-on-surface-variant/60 font-normal normal-case ml-2">(tùy chọn)</span>
+                      <span className="text-on-surface-variant/60 font-normal normal-case ml-2">(bắt buộc khi từ chối hoặc yêu cầu sửa)</span>
                     </span>
                     <textarea
                       value={comment}
